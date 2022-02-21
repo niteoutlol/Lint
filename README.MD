@@ -1,6 +1,6 @@
 # Lint
 
-It's like porth but bad. (But I'm bad at coding in python.)
+It's like Forth, but in python & im basically copying **[Porth](https://gitlab.com/tsoding/porth)**.
 
 ## Quick Start
 
