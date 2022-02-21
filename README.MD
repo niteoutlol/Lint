@@ -1,5 +1,7 @@
 # Lint
 
+**WORK IN PROGRESS: This language is not finished.**
+
 It's like Forth, but in python & im basically copying **[Porth](https://gitlab.com/tsoding/porth)**.
 
 ## TODO
