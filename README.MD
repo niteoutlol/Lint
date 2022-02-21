@@ -1,10 +1,20 @@
 # Lint
 
-It's like porth but bad. (But I'm bad at coding in python.)
+**WORK IN PROGRESS: This language is not finished.**
+
+It's like Forth, but in python & im basically copying **[Porth](https://gitlab.com/tsoding/porth)**.
+
+## TODO
+- [x] Compilable
+- [x] Native
+- [x] Stack-based
+- [ ] Turing complete
+- [ ] Statically typed
+- [ ] Self-hosted (Written in itself when it is mature enough) 
 
 ## Quick Start
 
-### First time
+### Linux Executable Permissions
 ```console
 $ chmod +x ./lint.py
 $ chomod +x ./output
