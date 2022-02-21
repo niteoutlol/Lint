@@ -5,10 +5,14 @@ It's like Forth, but in python & im basically copying **[Porth](https://gitlab.c
 ## TODO
 - [x] Compilable
 - [x] Native
+- [x] Stack-based
+- [ ] Turing complete
+- [ ] Statically typed
+- [ ] Self-hosted (Written in itself when it is mature enough) 
 
 ## Quick Start
 
-### First time
+### Linux Executable Permissions
 ```console
 $ chmod +x ./lint.py
 $ chomod +x ./output
