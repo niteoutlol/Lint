@@ -2,6 +2,10 @@
 
 It's like Forth, but in python & im basically copying **[Porth](https://gitlab.com/tsoding/porth)**.
 
+## TODO
+- [x] Compilable
+- [x] Native
+
 ## Quick Start
 
 ### First time
