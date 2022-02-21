@@ -14,6 +14,18 @@ It's like Forth, but in python & im basically copying **[Porth](https://gitlab.c
 
 ## Quick Start
 
+### Software
+```console
+$ sudo apt-get update -y
+$ sudo apt-get install nasm
+$ sudo apt-get install bintuils
+```
+**If you get an error like: /usr/bin/env: ‘python3\r’: No such file or directory**
+```console
+$ sudo apt-get install dos2unix
+$ sudo dos2unix ./lint.py
+```
+
 ### Linux Executable Permissions
 ```console
 $ chmod +x ./lint.py
