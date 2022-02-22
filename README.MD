@@ -17,12 +17,12 @@ It's like Forth, but in python & im basically copying **[Porth](https://gitlab.c
 ### Software
 ```console
 $ sudo apt-get update -y
-$ sudo apt-get install nasm
-$ sudo apt-get install bintuils
+$ sudo apt-get install nasm -y
+$ sudo apt-get install bintuils -y
 ```
 **If you get an error like: /usr/bin/env: ‘python3\r’: No such file or directory**
 ```console
-$ sudo apt-get install dos2unix
+$ sudo apt-get install dos2unix -y
 $ sudo dos2unix ./lint.py
 ```
 
