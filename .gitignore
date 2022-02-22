@@ -1,2 +1,5 @@
 output*
+*.asm
+*.o
+foo
 __pycache__/
