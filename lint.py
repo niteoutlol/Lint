@@ -19,6 +19,8 @@ OP_PLUS = iota()
 OP_MINUS = iota()
 OP_EQUAL = iota()
 OP_DUMP = iota()
+OP_IF = iota()
+OP_END = iota()
 COUNT_OPS = iota()
 
 def push(x):
@@ -35,6 +37,13 @@ def equal():
 
 def minus():
     return (OP_MINUS, )
+
+def iff():
+    return (OP_IF, )
+
+def end():
+    return (OP_END, )
+
 
 def simulate_program(program):
     stack = []
@@ -54,6 +63,11 @@ def simulate_program(program):
             a = stack.pop()
             b = stack.pop()
             stack.append(int(a == b))
+        elif op[0] == OP_IF:
+            a = stack.pop()
+            if a == 0:
+                # jump to end
+                pass
         elif op[0] == OP_DUMP:
             a = stack.pop()
             print(a)
@@ -61,7 +75,7 @@ def simulate_program(program):
             assert False, "Unreachable"
 
 def compile_program(program, out_file_path):
-    with open('output.asm', "w") as out:
+    with open(out_file_path, "w") as out:
         out.write("BITS 64\n")
         out.write("segment .text\n")
         out.write("dump:\n")
@@ -137,7 +151,7 @@ def compile_program(program, out_file_path):
 
 def parse_token_as_op(token):
     (file_path, row, col, word) = token
-    assert COUNT_OPS == 5, "Exhaustive op handling in parse_token_as_op"
+    assert COUNT_OPS == 7, "Exhaustive op handling in parse_token_as_op"
     if word == '+':
         return plus()
     elif word == '-':
@@ -146,6 +160,10 @@ def parse_token_as_op(token):
         return dump()
     elif word == '=':
         return equal()
+    elif word == 'if':
+        return iff()
+    elif word == 'end':
+        return end()
     else:
         try:
             return push(int(word))
@@ -195,35 +213,37 @@ def uncons(xs):
 if __name__ == "__main__":
     argv = sys.argv
     assert len(argv) >= 1
-    (program_name, argv) = uncons(argv)
+    compiler_name, *argv = argv
     if len(argv) < 2:
-        usage(program_name)
+        usage(compiler_name)
         print("ERROR: No subcommand provided.")
         exit(1)
-    (subcommand, argv) = uncons(argv)
+    subcommand, *argv = argv
 
     if subcommand == "sim":
         if len(argv) < 1:
-            usage(program_name)
-            print("ERROR: No input file is provided for the simulation")
+            usage(compiler_name)
+            print("ERROR: No input file is provided for the simulation.")
             exit(1)
-        (program_path, argv) = uncons(argv)
+        program_path, *argv = argv
         program = load_program_from_file(program_path)
         simulate_program(program)
     elif subcommand == "com":
+        # TODO: -r flag for the com that runs the application upon successfull compilation
         if len(argv) < 1:
-            usage(program_name)
+            usage(compiler_name)
             print("ERROR: No input file is provided for the compilation")
             exit(1)
-        (program_path, argv) = uncons(argv)
-        filename = program_path.replace(".lint", "")
+        program_path, *argv = argv
         program = load_program_from_file(program_path)
-        compile_program(program, "output.asm")
-        print(f"[INFO] Generating output.asm")
-        cmd_echoed(["nasm", "-felf64", "output.asm"])
-        cmd_echoed(["ld", "-o", 'output', 'output.o'])
-        #cmd_echoed(["./clean.sh"])
+        lint_ext = '.lint'
+        basename = path.basename(program_path)
+        if basename.endswith(lint_ext):
+            basename = basename[:-len(lint_ext)]
+        print("[INFO] Generating %s" % (basename + ".asm"))
+        compile_program(program, basename + '.asm')
+        cmd_echoed(["nasm", "-felf64", basename + ".asm"])
+        cmd_echoed(["ld", "-o", basename, basename + ".o"])
     else:
         usage()
-        print("ERROR: Unknown subcommand %s" % (subcommand))
         exit(1)
