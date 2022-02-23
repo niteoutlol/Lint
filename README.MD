@@ -28,11 +28,11 @@ $ sudo dos2unix ./lint.py
 
 ### Linux Executable Permissions
 ```console
-$ chmod +x ./lint.py
-$ chomod +x ./output
+$ sudo chmod +x ./lint.py
+$ sudo chomod +x ./output
 ```
 
-### Compilation & Simulatioon
+### Compilation & Simulatioon (May need permissions)
 ```console
 $ ./lint.py com ./examples/test.lint
 $ ./lint.py sim ./examples/test.lint
