@@ -47,30 +47,41 @@ def end():
 
 def simulate_program(program):
     stack = []
-    for op in program:
-        assert COUNT_OPS == 5, "Exhaustive handling of operations in simulation."
+    ip = 0
+    while ip < len(program):
+        assert COUNT_OPS == 7, "Exhaustive handling of operations in simulation."
+        op = program[ip]
         if op[0] == OP_PUSH:
             stack.append(op[1])
+            ip += 1
         elif op[0] == OP_PLUS:
             a = stack.pop()
             b = stack.pop()
             stack.append(a + b)
+            ip += 1
         elif op[0] == OP_MINUS:
             a = stack.pop()
             b = stack.pop()
             stack.append(b - a)
+            ip += 1
         elif op[0] == OP_EQUAL:
             a = stack.pop()
             b = stack.pop()
             stack.append(int(a == b))
+            ip += 1
         elif op[0] == OP_IF:
             a = stack.pop()
             if a == 0:
-                # jump to end
-                pass
+                assert len(op) >= 2, "`if` instruction does not have a referene to the end of its block. Please call crossreference_blocks() on the program before trying to simulate."
+                ip = op[1]
+            else:    
+                ip += 1
+        elif op[0] == OP_END:
+            ip += 1
         elif op[0] == OP_DUMP:
             a = stack.pop()
             print(a)
+            ip += 1
         else:
             assert False, "Unreachable"
 
@@ -113,8 +124,9 @@ def compile_program(program, out_file_path):
         out.write("    ret\n")
         out.write("global _start\n")
         out.write("_start:\n")
-        for op in program:
-            assert COUNT_OPS == 5, "Exhaustive handling of ops in compilation."
+        for ip in range(len(program)):
+            op = program[ip]
+            assert COUNT_OPS == 7, "Exhaustive handling of ops in compilation."
             if op[0] == OP_PUSH:
                 out.write("    ;; -- push %d --\n" % op[1])
                 out.write("    push %d\n" % op[1])
@@ -142,6 +154,15 @@ def compile_program(program, out_file_path):
                 out.write("    pop rbx\n")
                 out.write("    cmp rax, rbx\n")
                 out.write("    cmove rcx, rdx\n")
+                out.write("    push rcx\n")
+            elif op[0] == OP_IF:
+                out.write("    ;; -- if -- \n")
+                out.write("    pop rax\n")
+                out.write("    test rax, rax\n")
+                assert len(op) == 2, "`if` instruction does not have a referene to the end of its block. Please call crossreference_blocks() on the program before trying to compile it."
+                out.write("    jz addr_%d\n" % op[1])
+            elif op[0] == OP_END:
+                out.write("addr_%d:\n" % ip)
             else:
                 assert False, "Unreachable"
 
@@ -178,6 +199,19 @@ def usage(program):
     print("    sim <file>        Simulate the program")
     print("    com <file>        Compile the program")
 
+def crossreference_blocks(program):
+    stack = []
+    for ip in range(len(program)):
+        op = program[ip]
+        assert COUNT_OPS == 7, "Exhaustive handling of ops in crossreference_blocks. Keep in mind that not all of the ops need to be handled here. Only those that form blocks."
+        if op[0] == OP_IF:
+            stack.append(ip)
+        elif op[0] == OP_END:
+            if_ip = stack.pop()
+            assert program[if_ip][0] == OP_IF, "End can only close if blocks for now."
+            program[if_ip] = (OP_IF, ip)
+    return program
+
 def find_col(line, start, predicate):
     while start < len(line) and not predicate(line[start]):
         start += 1
@@ -193,12 +227,12 @@ def lex_line(line):
 
 def lex_file(file_path):
     with open(file_path, 'r') as f:
-        return [(file_path, row, col, token)
-            for (row, line) in enumerate(f.readlines())
-            for (col, token) in lex_line(line)]
+        for (row, line) in enumerate(f.readlines()):
+            for (col, token) in lex_line(line):
+                yield (file_path, row, col, token)
 
 def load_program_from_file(file_path):
-    return [parse_token_as_op(token) for token in lex_file(file_path)]
+    return crossreference_blocks([parse_token_as_op(token) for token in lex_file(file_path)])
 
 def call_cmd(cmd):
     subprocess.call(cmd)
