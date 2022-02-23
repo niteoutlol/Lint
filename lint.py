@@ -21,6 +21,7 @@ OP_EQUAL = iota()
 OP_DUMP = iota()
 OP_IF = iota()
 OP_END = iota()
+OP_ELSE = iota()
 COUNT_OPS = iota()
 
 def push(x):
@@ -43,6 +44,9 @@ def iff():
 
 def end():
     return (OP_END, )
+
+def elze():
+    return (OP_ELSE, )
 
 
 def simulate_program(program):
@@ -172,7 +176,7 @@ def compile_program(program, out_file_path):
 
 def parse_token_as_op(token):
     (file_path, row, col, word) = token
-    assert COUNT_OPS == 7, "Exhaustive op handling in parse_token_as_op"
+    assert COUNT_OPS == 8, "Exhaustive op handling in parse_token_as_op"
     if word == '+':
         return plus()
     elif word == '-':
@@ -185,6 +189,8 @@ def parse_token_as_op(token):
         return iff()
     elif word == 'end':
         return end()
+    elif word == 'else':
+        return elze()
     else:
         try:
             return push(int(word))
@@ -206,9 +212,14 @@ def crossreference_blocks(program):
         assert COUNT_OPS == 7, "Exhaustive handling of ops in crossreference_blocks. Keep in mind that not all of the ops need to be handled here. Only those that form blocks."
         if op[0] == OP_IF:
             stack.append(ip)
-        elif op[0] == OP_END:
+        elif op[0] == OP_ELSE:
             if_ip = stack.pop()
-            assert program[if_ip][0] == OP_IF, "End can only close if blocks for now."
+            assert program[if_ip][0] == OP_IF, "`else` can only be used in `if`-blocks"
+            program[if_ip] = (OP_IF, ip)
+            stack.append(ip)
+        elif op[0] == OP_END:
+            if_else_ip = stack.pop()
+            assert program[if_ip][0] == OP_IF, "`end` can only close if blocks for now."
             program[if_ip] = (OP_IF, ip)
     return program
 
