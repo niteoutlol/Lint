@@ -1,9 +1,5 @@
-2000 22 + 2022 = if
-    1 if
-        23 .
-    else
-        42 .
-    end
-else
-    2023 .
-end
+2022
+dup .
+dup .
+dup .
+dup .
