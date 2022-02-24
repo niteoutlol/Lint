@@ -2,4 +2,5 @@ output*
 *.asm
 *.o
 foo
+while
 __pycache__/
