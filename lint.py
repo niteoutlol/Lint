@@ -53,7 +53,7 @@ def simulate_program(program):
     stack = []
     ip = 0
     while ip < len(program):
-        assert COUNT_OPS == 7, "Exhaustive handling of operations in simulation."
+        assert COUNT_OPS == 8, "Exhaustive handling of operations in simulation."
         op = program[ip]
         if op[0] == OP_PUSH:
             stack.append(op[1])
@@ -80,6 +80,9 @@ def simulate_program(program):
                 ip = op[1]
             else:    
                 ip += 1
+        elif op[0] == OP_ELSE:
+            assert len(op) >= 2, "`else` instruction does not have a referene to the end of its block. Please call crossreference_blocks() on the program before trying to simulate."
+            ip = op[1]
         elif op[0] == OP_END:
             ip += 1
         elif op[0] == OP_DUMP:
@@ -130,7 +133,7 @@ def compile_program(program, out_file_path):
         out.write("_start:\n")
         for ip in range(len(program)):
             op = program[ip]
-            assert COUNT_OPS == 7, "Exhaustive handling of ops in compilation."
+            assert COUNT_OPS == 8, "Exhaustive handling of ops in compilation."
             if op[0] == OP_PUSH:
                 out.write("    ;; -- push %d --\n" % op[1])
                 out.write("    push %d\n" % op[1])
@@ -165,6 +168,11 @@ def compile_program(program, out_file_path):
                 out.write("    test rax, rax\n")
                 assert len(op) == 2, "`if` instruction does not have a referene to the end of its block. Please call crossreference_blocks() on the program before trying to compile it."
                 out.write("    jz addr_%d\n" % op[1])
+            elif op[0] == OP_ELSE:
+                out.write("    ;; -- else --\n")
+                assert len(op) == 2, "`else` instruction does not have a referene to the end of its block. Please call crossreference_blocks() on the program before trying to compile it."
+                out.write("    jmp addr_%d\n" % op[1])
+                out.write("addr_%d:\n" % (ip+1))
             elif op[0] == OP_END:
                 out.write("addr_%d:\n" % ip)
             else:
@@ -200,7 +208,7 @@ def parse_token_as_op(token):
 
 
 def usage(program):
-    print("Usage: %s <SUBCOMMAND> [ARGS]", program)
+    print("Usage: %s <SUBCOMMAND> [ARGS]" % program)
     print("SUBCOMMANDS:")
     print("    sim <file>        Simulate the program")
     print("    com <file>        Compile the program")
@@ -209,18 +217,20 @@ def crossreference_blocks(program):
     stack = []
     for ip in range(len(program)):
         op = program[ip]
-        assert COUNT_OPS == 7, "Exhaustive handling of ops in crossreference_blocks. Keep in mind that not all of the ops need to be handled here. Only those that form blocks."
+        assert COUNT_OPS == 8, "Exhaustive handling of ops in crossreference_blocks. Keep in mind that not all of the ops need to be handled here. Only those that form blocks."
         if op[0] == OP_IF:
             stack.append(ip)
         elif op[0] == OP_ELSE:
             if_ip = stack.pop()
             assert program[if_ip][0] == OP_IF, "`else` can only be used in `if`-blocks"
-            program[if_ip] = (OP_IF, ip)
+            program[if_ip] = (OP_IF, ip + 1)
             stack.append(ip)
         elif op[0] == OP_END:
-            if_else_ip = stack.pop()
-            assert program[if_ip][0] == OP_IF, "`end` can only close if blocks for now."
-            program[if_ip] = (OP_IF, ip)
+            block_ip = stack.pop()
+            if program[block_ip][0] == OP_IF or program[block_ip][0] == OP_ELSE:
+                program[block_ip] = (program[block_ip][0], ip)
+            else:
+                assert False, "`end` can only close `if-else` blocks for now."
     return program
 
 def find_col(line, start, predicate):
